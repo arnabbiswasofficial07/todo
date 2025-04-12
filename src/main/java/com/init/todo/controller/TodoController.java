@@ -46,4 +46,10 @@ public class TodoController {
         todoService.delete(id);
         return ResponseEntity.ok().build();
     }
+
+    // Health Check
+    @GetMapping("/health")
+    public String healthCheck() {
+        return "OK";
+    }
 }
