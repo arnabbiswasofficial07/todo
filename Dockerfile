@@ -1,22 +1,13 @@
-# Importing JDK and copying required files
-FROM openjdk:21-jdk AS build
+FROM eclipse-temurin:21-jdk as build
+COPY . /app
 WORKDIR /app
-COPY pom.xml .
-COPY src src
+RUN ./mvnw package -DskipTests
+RUN mv -f target/*.jar app.jar
 
-# Copy Maven wrapper
-COPY mvnw .
-COPY .mvn .mvn
-
-# Set execution permission for the Maven wrapper
-RUN chmod +x ./mvnw
-RUN ./mvnw clean package -DskipTests
-
-# Stage 2: Create the final Docker image using OpenJDK 19
-FROM openjdk:21-jdk
-VOLUME /tmp
-
-# Copy the JAR from the build stage
-COPY --from=build /app/target/*.jar app.jar
-ENTRYPOINT ["java","-jar","/app.jar"]
-EXPOSE 8080
+FROM eclipse-temurin:21-jre
+ARG PORT
+ENV PORT=${PORT}
+COPY --from=build /app/app.jar .
+RUN useradd runtime
+USER runtime
+ENTRYPOINT [ "java", "-Dserver.port=${PORT}", "-jar", "app.jar" ]
